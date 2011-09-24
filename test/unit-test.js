@@ -9,14 +9,14 @@ var cssContext = function(groups) {
       assert.equal(cleanCSS.process(css), cleanedCSS);
     }
   };
-  
+
   for (var g in groups) {
     var transformation = groups[g];
     if (typeof transformation == 'string') transformation = [transformation, transformation];
     if (!transformation[0].push) {
       transformation = [[transformation[0], transformation[1]]];
     }
-    
+
     for (var i = 0, c = transformation.length; i < c; i++) {
       context[g + ' #' + (i + 1)] = {
         topic: transformation[i][0],
@@ -24,7 +24,7 @@ var cssContext = function(groups) {
       };
     }
   }
-  
+
   return context;
 };
 
@@ -175,19 +175,96 @@ vows.describe('clean-units').addBatch({
       'a{outline:none}',
       'a{outline:0}'
     ],
+    'strips leading zeros': [
+      'a{margin-bottom:000px}',
+      'a{margin-bottom:0}'
+    ],
     'display:none not changed': 'a{display:none}',
     'longer background declaration not changed': 'html{background:none repeat scroll 0 0 white}',
-    'mixed zeros not changed': 'div{margin:0 0 1px 0}',
-    'mixed zeros not changed #2': 'div{padding:0 1px 0 0}'
   }),
   'floats': cssContext({
-    'strips zero in fractions': [
+    'strips leading zero in fractions': [
       'a{ margin-bottom: 0.5em}',
       'a{margin-bottom:.5em}'
     ],
-    'not strips zero in fractions of numbers greater than zero': [
+    'strips bunch of leading zeros in fractions': [
+      'a{ margin-bottom: 000.5em}',
+      'a{margin-bottom:.5em}'
+    ],
+    'not strips leading zero in fractions of numbers greater than zero': [
       'a{ margin-bottom: 20.5em}',
       'a{margin-bottom:20.5em}'
+    ],
+    'strips trailing zeros': [
+      'a{margin-bottom:.550em}',
+      'a{margin-bottom:.55em}',
+    ],
+    'not strips trailing zeros': [
+      'a{margin-bottom:050em}',
+      'a{margin-bottom:50em}'
+    ],
+    'strips floating zeros': [
+      'a{margin-bottom:0.00em}',
+      'a{margin-bottom:0}'
+    ],
+    'not strips floating zeros': [
+      'a{margin-bottom:0.05em}',
+      'a{margin-bottom:.05em}'
+    ]
+  }),
+  'collapse t, r, b, l': cssContext({
+    'mixed zeros changed': [
+      'div{margin:0 0 1px 0}',
+      'div{margin:0 0 1px}'
+    ],
+    'mixed zeros not changed': 'div{padding:0 1px 0 0}',
+
+    'zeros with units': [
+      'div{margin:0 0pt 0px}',
+      'div{margin:0}'
+    ],
+    'zeros without units': 'div{margin:0}',
+
+    't, r, b, l same': [
+      'div{padding:5px 5px 5px 5px}',
+      'div{padding:5px}'
+    ],
+    't, r, b, l different units': 'div{padding:5px 5pt 5em 5%}',
+    't, r, b, l different values': 'div{padding:5px 10px 15px 20px}',
+
+    't, r/l, b same': [
+      'div{padding:5px 5px 5px}',
+      'div{padding:5px}'
+    ],
+    't, r/l, b different': 'div{padding:5px 10px 15px}',
+
+    't/b and l/r same': [
+      'div{padding:5px 5px}',
+      'div{padding:5px}'
+    ],
+    't/b and l/r different': 'div{padding:5px 10px}',
+
+    't/b, l/r': [
+      'div{padding:5px 10px 5px 10px}',
+      'div{padding:5px 10px}',
+    ],
+    't, l/r, b': [
+      'div{padding:5px 10px 7px 10px}',
+      'div{padding:5px 10px 7px}',
+    ],
+
+    'with fractions': [
+      'div{margin:0.5em .5em 0.5em}',
+      'div{margin:.5em}'
+    ],
+    'with fractions #2': [
+      'div{margin:0.5em .5px 0.5em 0.5px}',
+      'div{margin:.5em .5px}'
+    ],
+
+    'border-width': [
+      'div{border-width:5px 10px 7px 10px}',
+      'div{border-width:5px 10px 7px}',
     ]
   }),
   'colors': cssContext({
